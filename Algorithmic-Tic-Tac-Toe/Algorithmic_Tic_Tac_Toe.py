@@ -2,6 +2,7 @@ import pygame
 import sys
 from itertools import chain
 from random import randint
+import math
 
 pygame.init()
 
@@ -91,6 +92,69 @@ def check_board():
         return (5, 5, 5, 5, 5)
     return None
 
+########################
+# Minimax Implementation
+def testMoves():
+    global board
+    global player_turn
+
+    maxScore = -math.inf
+    bestMove = None
+
+    for x in range(0, 3):
+        for y in range(0, 3):
+            if board[x][y] is None:
+                board[x][y] = player_turn
+                score = minimax(0, True)
+                board[x][y] = None
+                if score > maxScore:
+                    maxScore = score
+                    bestMove = (x, y)
+    print(maxScore, "testMove")
+    board[bestMove[0]][bestMove[1]] = player_turn
+
+def minimax(depth, bMax):
+    global board
+
+    status = check_board()
+    print(status)
+    if status == 1:
+        score = -1
+        return score
+    elif status == 0:
+        score = 1
+        return score
+    elif status == 5:
+        score = 0
+        return score
+    else:
+        if bMax:
+            maxScore = -math.inf
+            for x in range(0, 3):
+                for y in range(0, 3):
+                    if board[x][y] is None:
+                        board[x][y] = player_turn
+                        score = minimax(depth + 1, False)
+                        board[x][y] = None
+                        if score > maxScore:
+                            maxScore = score
+            print(maxScore, "maxScore")
+            return maxScore
+        else:
+            minScore = math.inf
+            for x in range(0, 3):
+                for y in range(0, 3):
+                    if board[x][y] is None:
+                        board[x][y] = not player_turn
+                        score = minimax(depth + 1, True)
+                        board[x][y] = None
+                        if score < minScore:
+                            minScore = score
+            print(minScore, "minScore")
+            return minScore
+    
+########################
+
 # Change board state
 def click_event():
     global board
@@ -98,23 +162,19 @@ def click_event():
     global player_turn
     global can_move
 
-    if mouse_loc == round_mouse_loc() and can_move:
+    if player_turn and mouse_loc == round_mouse_loc() and can_move:
         if board[mouse_loc[0]][mouse_loc[1]] is None:
             board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
 
     if not player_turn and check_board() is None:
-        comp_move_x = randint(0, 2)
-        comp_move_y = randint(0, 2)
-        while not board[comp_move_x][comp_move_y] is None:
-            comp_move_x = randint(0, 2)
-            comp_move_y = randint(0, 2)
-        board[comp_move_x][comp_move_y] = player_turn                    
+        testMoves()
         player_turn = not player_turn
 
 # Returns mouse position as a tuple of grid
 def round_mouse_loc():
     x_pos, y_pos = pygame.mouse.get_pos()
+
     if x_pos < _WIDTH / 3:
         x = 0
     elif _WIDTH / 3 <= x_pos < (2/3) * _WIDTH:
@@ -160,9 +220,7 @@ while not game_end:
 
         # If event is mouseclickup
         elif event.type == 6:
-
             click_event()
-
             draw_board()
 
             winner = check_board()
