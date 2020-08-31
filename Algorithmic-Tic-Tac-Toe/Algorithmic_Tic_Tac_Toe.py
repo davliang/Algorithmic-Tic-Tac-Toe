@@ -37,18 +37,38 @@ def init_board():
     border = pygame.draw.rect(background, border_color, border_location, 5)
 
     # Draw crossing game board
-    pygame.draw.line(background, (0, 0, 0), ((1/3) * _WIDTH, 25), ((1/3) * _WIDTH, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), ((2/3) * _WIDTH, 25), ((2/3) * _WIDTH, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, (1/3) * _HEIGHT), (_WIDTH - 25, (1/3) * _HEIGHT), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, (2/3) * _HEIGHT), (_WIDTH - 25, (2/3) * _HEIGHT), 2)
+    line_width = int((1/3) * _WIDTH)
+    line_height = int((1/3) * _HEIGHT)
+    pygame.draw.line(background, (0, 0, 0), (line_width, 25), (line_width, _HEIGHT - 25), 2)
+    pygame.draw.line(background, (0, 0, 0), (line_width * 2, 25), (line_width * 2, _HEIGHT - 25), 2)
+    pygame.draw.line(background, (0, 0, 0), (25, line_height), (_WIDTH - 25, line_height), 2)
+    pygame.draw.line(background, (0, 0, 0), (25, line_height * 2), (_WIDTH - 25, line_height * 2), 2)
 
     # Update screen with background
     screen.blit(background, (0, 0))
 init_board()
 
+def declare_winner(winner):
+    print(winner)
+    pass
+
 # Check board for winner
 def check_board():
     global board
+    if not None in board:
+        for x in range(0, 3):
+            if board[x][0] == board[x][1] == board[x][2]:
+                declare_winner(board[x][0])
+        for y in range(0, 3):
+            if board[0][y] == board[1][y] == board[2][y]:
+                declare_winner(board[0][y])
+        if board[0][0] == board[1][1] == board[2][2]:
+            declare_winner(board[0][0])
+            pass
+        if board[0][2] == board[1][1] == board[2][0]:
+            declare_winner(board[0][2])
+            pass
+        pass
 
 # Change board state
 def click_event():
@@ -61,7 +81,9 @@ def click_event():
             board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
             draw_board()
+            check_board()
 
+# Returns mouse position as a tuple of grid
 def round_mouse_loc():
     x_pos, y_pos = pygame.mouse.get_pos()
     if x_pos < _WIDTH / 3:
@@ -78,22 +100,12 @@ def round_mouse_loc():
     else:
         y = 2
 
-    print(x, y)
-
     return (x, y)
 
 # Draw current state of the board
 def draw_board():
 
     global board
-    global mouse_loc
-    global pygame
-    
-    # Remove mouse check from draw_board and put into logic function
-    # Create new function that rounds the mouse position to one of the boxes and to check if the new mouse location is outside of the original box
-    # Remove global declarations after new function creation
-
-    #init_board()
 
     for x_index in range(0, 3):
             for y_index in range(0, 3):
@@ -101,9 +113,9 @@ def draw_board():
                     x = ((1/6) + (2/6) * x_index) * _WIDTH
                     y = ((1/6) + (2/6) * y_index) * _HEIGHT
                     if board[x_index][y_index]:
-                        screen.blit(x_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+                        screen.blit(x_move, (int(x - scale_img_x / 2), int(y - scale_img_y / 2)))
                     else:
-                        screen.blit(o_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+                        screen.blit(o_move, (int(x - scale_img_x / 2), int(y - scale_img_y / 2)))
 
 game_end = False
 while not game_end:
