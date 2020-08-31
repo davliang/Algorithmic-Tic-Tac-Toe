@@ -1,6 +1,7 @@
 import pygame
 import sys
 from itertools import chain
+from random import randint
 
 pygame.init()
 
@@ -102,6 +103,15 @@ def click_event():
             board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
 
+    if not player_turn and check_board() is None:
+        comp_move_x = randint(0, 2)
+        comp_move_y = randint(0, 2)
+        while not board[comp_move_x][comp_move_y] is None:
+            comp_move_x = randint(0, 2)
+            comp_move_y = randint(0, 2)
+        board[comp_move_x][comp_move_y] = player_turn                    
+        player_turn = not player_turn
+
 # Returns mouse position as a tuple of grid
 def round_mouse_loc():
     x_pos, y_pos = pygame.mouse.get_pos()
@@ -123,7 +133,6 @@ def round_mouse_loc():
 
 # Draw current state of the board
 def draw_board():
-
     global board
 
     for x_index in range(0, 3):
