@@ -68,14 +68,21 @@ def get_all_possible_moves(board):
 def end_game(status):
     if status == (None, None, None, None, None):
         return
+
+    global can_move
+    can_move = False
     if status == (5, 5, 5, 5, 5):
         print("Draw")
         return
+
     grid_width = (1/6) * WIDTH
     grid_height = (1/6) * HEIGHT
+
     p_begin = (int(grid_width + status[1] * grid_width * 2), int(grid_height + status[2] * grid_height * 2))
     p_end = (int(grid_width + status[3] * grid_width * 2), int(grid_height + status[4] * grid_height * 2))
+
     pygame.draw.line(screen, (255, 0, 0), p_begin, p_end, 15)
+
 
 # Returns the status of the current board i.e who won or draw
 def check_status(board):
@@ -112,6 +119,9 @@ def minimax(board, isMax):
 
 # Setup to start recursive minimax function
 def compute_next_move(board):
+    if not get_all_possible_moves(board):
+        return
+
     ideal_score = -math.inf
     ideal_move = None
     for move in get_all_possible_moves(board):
@@ -124,11 +134,11 @@ def compute_next_move(board):
     board[ideal_move[0]][ideal_move[1]] = False
 
 # Change board state based on player move
-def player_move(board, mouse_pos, player_turn):
+def player_move(board, mouse_pos, player_turn, can_move):
     if not mouse_pos == round_mouse_loc():
         return False
     
-    if player_turn and (mouse_pos[0], mouse_pos[1]) in get_all_possible_moves(board):
+    if player_turn and (mouse_pos[0], mouse_pos[1]) in get_all_possible_moves(board) and can_move:
             board[mouse_pos[0]][mouse_pos[1]] = True
             return True
     else:
@@ -176,24 +186,24 @@ while not game_over:
         elif event.type == 5:
             mouse_loc = round_mouse_loc()
 
-        elif event.type == 6:
-            if player_move(board, mouse_loc, player_turn):
+        elif event.type == 6 and can_move:
+            if player_move(board, mouse_loc, player_turn, can_move):
                 player_turn = not player_turn
             draw_game(board)
             end_game(check_status(board))
+            print(can_move)
             
-
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 reset_variables()
                 init_board()
 
-    if not player_turn:
+    if not player_turn and can_move:
         compute_next_move(board)
         player_turn = not player_turn
         draw_game(board)
         end_game(check_status(board))
-
+    
     pygame.display.update()
 
 
