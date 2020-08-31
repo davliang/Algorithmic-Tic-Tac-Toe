@@ -49,31 +49,40 @@ def check_board():
 
 # Draw current state of the board
 def draw_board():
+
     global board
+    global mouse_loc
+    global pygame
+    
+    if mouse_loc == pygame.mouse.get_pos():
+        init_board()
 
-    init_board()
+        board[randint(0,2)][randint(0,2)] = True
+        board[randint(0,2)][randint(0,2)] = False
 
-    board[randint(0,2)][randint(0,2)] = True
-    board[randint(0,2)][randint(0,2)] = False
-
-    for x_index in range(0, 3):
-            for y_index in range(0, 3):
-                if board[x_index][y_index] is not None:
-                    x = ((1/6) + (2/6) * x_index) * _WIDTH
-                    y = ((1/6) + (2/6) * y_index) * _HEIGHT
-                    if board[x_index][y_index]:
-                        screen.blit(x_move, (x - scale_img_x / 2, y - scale_img_y / 2))
-                    else:
-                        screen.blit(o_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+        for x_index in range(0, 3):
+                for y_index in range(0, 3):
+                    if board[x_index][y_index] is not None:
+                        x = ((1/6) + (2/6) * x_index) * _WIDTH
+                        y = ((1/6) + (2/6) * y_index) * _HEIGHT
+                        if board[x_index][y_index]:
+                            screen.blit(x_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+                        else:
+                            screen.blit(o_move, (x - scale_img_x / 2, y - scale_img_y / 2))
 
 game_end = False
-
 while not game_end:
 
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             sys.exit(0)
+
+        # If event is mouseclickdown
+        elif event.type == 5:
+
+            # Later used to check if mouse moved and to do no move if mouse moved
+            mouse_loc = pygame.mouse.get_pos()
 
         # If event is mouseclickup
         elif event.type == 6:
