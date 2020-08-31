@@ -11,6 +11,11 @@ HEIGHT = 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
 
+# Set window icon
+icon = pygame.image.load("img/icon.png").convert_alpha()
+icon.set_colorkey((255, 255, 255))
+pygame.display.set_icon(icon)
+
 # Import X and O and rescale
 scale_img_x = int(WIDTH / 4)
 scale_img_y = int(HEIGHT / 4)
