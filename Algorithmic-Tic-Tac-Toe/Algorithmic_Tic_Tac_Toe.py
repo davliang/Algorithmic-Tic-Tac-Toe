@@ -1,6 +1,6 @@
 import pygame
 import sys
-from random import randint
+from itertools import chain
 
 pygame.init()
 
@@ -49,26 +49,25 @@ def init_board():
 init_board()
 
 def declare_winner(winner):
+    if winner is None:
+        return
     print(winner)
-    pass
 
 # Check board for winner
 def check_board():
     global board
-    if not None in board:
-        for x in range(0, 3):
-            if board[x][0] == board[x][1] == board[x][2]:
-                declare_winner(board[x][0])
-        for y in range(0, 3):
-            if board[0][y] == board[1][y] == board[2][y]:
-                declare_winner(board[0][y])
-        if board[0][0] == board[1][1] == board[2][2]:
-            declare_winner(board[0][0])
-            pass
-        if board[0][2] == board[1][1] == board[2][0]:
-            declare_winner(board[0][2])
-            pass
-        pass
+
+    for x in range(0, 3):
+        if board[x][0] == board[x][1] == board[x][2]:
+            return board[x][0]
+    for y in range(0, 3):
+        if board[0][y] == board[1][y] == board[2][y]:
+            return board[0][y]
+    if board[0][0] == board[1][1] == board[2][2]:
+        return board[0][0]
+    if board[0][2] == board[1][1] == board[2][0]:
+        return board[0][2]
+    return None
 
 # Change board state
 def click_event():
@@ -80,8 +79,6 @@ def click_event():
         if board[mouse_loc[0]][mouse_loc[1]] is None:
             board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
-            draw_board()
-            check_board()
 
 # Returns mouse position as a tuple of grid
 def round_mouse_loc():
@@ -134,5 +131,14 @@ while not game_end:
         elif event.type == 6:
             #draw_board()
             click_event()
+            draw_board()
+
+            winner = check_board()
+            if winner is not None:
+                declare_winner(winner)
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                init_board()
     
     pygame.display.update()
