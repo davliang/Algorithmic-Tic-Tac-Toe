@@ -17,6 +17,7 @@ o_move = pygame.transform.scale(pygame.image.load("img/o.png"), (scale_img_x , s
 
 # Initialize players (Human is True, Computer is False)
 player_turn = True
+can_move = True
 
 # Initialize game board to blank
 def init_board():
@@ -49,7 +50,7 @@ init_board()
 
 # Draws strikes on board and declares winner
 def declare_winner(winner):
-    
+    can_move = False
 
 # Check board for winner
 def check_board():
@@ -74,7 +75,7 @@ def click_event():
     global player_turn
     global can_move
 
-    if mouse_loc == round_mouse_loc():
+    if mouse_loc == round_mouse_loc() and can_move:
         if board[mouse_loc[0]][mouse_loc[1]] is None:
             board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
