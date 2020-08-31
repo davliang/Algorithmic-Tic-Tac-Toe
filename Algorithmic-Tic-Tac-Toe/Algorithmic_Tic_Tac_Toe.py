@@ -16,6 +16,9 @@ scale_img_y = int(_HEIGHT / 4)
 x_move = pygame.transform.scale(pygame.image.load("img/x.png"), (scale_img_x , scale_img_y))
 o_move = pygame.transform.scale(pygame.image.load("img/o.png"), (scale_img_x , scale_img_y))
 
+# Initialize players (Human is True, Computer is False)
+player_turn = True
+
 # Initialize game board to blank
 def init_board():
 
@@ -47,6 +50,32 @@ init_board()
 def check_board():
     global board
 
+# Change board state
+def click_event():
+    global board
+    global mouse_loc
+    global player_turn
+
+    if mouse_loc == pygame.mouse.get_pos():
+        if mouse_loc[0] < _WIDTH / 3:
+            x = 0
+        elif _WIDTH / 3 <= mouse_loc[0] < (2/3) * _WIDTH:
+            x = 1
+        else:
+            x = 2
+
+        if mouse_loc[1] < _HEIGHT / 3:
+            y = 0
+        elif _HEIGHT / 3 <= mouse_loc[1] < (2/3) * _HEIGHT:
+            y = 1
+        else:
+            y = 2
+
+        if board[x][y] is None:
+            board[x][y] = player_turn
+            player_turn = not player_turn
+            draw_board()
+
 # Draw current state of the board
 def draw_board():
 
@@ -54,21 +83,21 @@ def draw_board():
     global mouse_loc
     global pygame
     
-    if mouse_loc == pygame.mouse.get_pos():
-        init_board()
+    # Remove mouse check from draw_board and put into logic function
+    # Create new function that rounds the mouse position to one of the boxes and to check if the new mouse location is outside of the original box
+    # Remove global declarations after new function creation
 
-        board[randint(0,2)][randint(0,2)] = True
-        board[randint(0,2)][randint(0,2)] = False
+    #init_board()
 
-        for x_index in range(0, 3):
-                for y_index in range(0, 3):
-                    if board[x_index][y_index] is not None:
-                        x = ((1/6) + (2/6) * x_index) * _WIDTH
-                        y = ((1/6) + (2/6) * y_index) * _HEIGHT
-                        if board[x_index][y_index]:
-                            screen.blit(x_move, (x - scale_img_x / 2, y - scale_img_y / 2))
-                        else:
-                            screen.blit(o_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+    for x_index in range(0, 3):
+            for y_index in range(0, 3):
+                if board[x_index][y_index] is not None:
+                    x = ((1/6) + (2/6) * x_index) * _WIDTH
+                    y = ((1/6) + (2/6) * y_index) * _HEIGHT
+                    if board[x_index][y_index]:
+                        screen.blit(x_move, (x - scale_img_x / 2, y - scale_img_y / 2))
+                    else:
+                        screen.blit(o_move, (x - scale_img_x / 2, y - scale_img_y / 2))
 
 game_end = False
 while not game_end:
@@ -80,17 +109,12 @@ while not game_end:
 
         # If event is mouseclickdown
         elif event.type == 5:
-
             # Later used to check if mouse moved and to do no move if mouse moved
             mouse_loc = pygame.mouse.get_pos()
 
         # If event is mouseclickup
         elif event.type == 6:
-            draw_board()
-
-        pygame.display.flip()
-
-        print(event.type)
-
+            #draw_board()
+            click_event()
     
     pygame.display.update()
