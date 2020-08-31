@@ -1,5 +1,6 @@
 import pygame
 import sys
+from itertools import chain
 
 pygame.init()
 
@@ -26,6 +27,12 @@ def init_board():
     global board
     board = [[None] * 3, [None] * 3, [None] * 3]
 
+    # Reset turns and player move
+    global player_turn
+    global can_move
+    player_turn = True
+    can_move = True
+
     # Set background color to white
     background = pygame.Surface(screen.get_size())
     background = background.convert()
@@ -50,7 +57,20 @@ init_board()
 
 # Draws strikes on board and declares winner
 def declare_winner(winner):
+    global can_move
     can_move = False
+
+    if winner == (5, 5, 5, 5, 5):
+        print("Draw")
+        return
+
+    grid_width = (1/6) * _WIDTH
+    grid_height = (1/6) * _HEIGHT
+
+    p_begin = (int(grid_width + winner[1] * grid_width * 2), int(grid_height + winner[2] * grid_height * 2))
+    p_end = (int(grid_width + winner[3] * grid_width * 2), int(grid_height + winner[4] * grid_height * 2))
+
+    pygame.draw.line(screen, (255, 0, 0), p_begin, p_end, 15)
 
 # Check board for winner
 def check_board():
@@ -66,6 +86,8 @@ def check_board():
         return (board[0][0], 0, 0, 2, 2)
     if board[0][2] == board[1][1] == board[2][0] and board[0][2] is not None:
         return (board[0][2], 0, 2, 2, 0)
+    if not None in chain.from_iterable(board):
+        return (5, 5, 5, 5, 5)
     return None
 
 # Change board state
