@@ -1,84 +1,84 @@
 import pygame
-import sys
 from itertools import chain
-from random import randint
 import math
-import time
 
 pygame.init()
 
-_WIDTH = 800
-_HEIGHT = 800
+WIDTH = 800
+HEIGHT = 800
 
-screen = pygame.display.set_mode((_WIDTH, _HEIGHT))
+# Set window size to variables and window title
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
 
-# Import and rescale images
-scale_img_x = int(_WIDTH / 4)
-scale_img_y = int(_HEIGHT / 4)
-x_move = pygame.transform.scale(pygame.image.load("img/x.png"), (scale_img_x , scale_img_y))
-o_move = pygame.transform.scale(pygame.image.load("img/o.png"), (scale_img_x , scale_img_y))
+# Import X and O and rescale
+scale_img_x = int(WIDTH / 4)
+scale_img_y = int(HEIGHT / 4)
+x_img = pygame.transform.scale(pygame.image.load("img/x.png"), (scale_img_x, scale_img_y))
+o_img = pygame.transform.scale(pygame.image.load("img/o.png"), (scale_img_x, scale_img_y))
 
-# Initialize players (Human is True, Computer is False)
-player_turn = True
-can_move = True
-
-# Initialize game board to blank
-def init_board():
-
+# Set all global game variables to default values
+def reset_variables():
     # Reset game board
     global board
     board = [[None] * 3, [None] * 3, [None] * 3]
 
-    # Reset turns and player move
+    # Reset player turns
     global player_turn
-    global can_move
     player_turn = True
+
+    # Reset can_move status
+    global can_move
     can_move = True
 
+    global mouse_loc
+    mouse_loc = None
+
+# Initialize game board background draw
+def init_board():
     # Set background color to white
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
+    background = pygame.Surface(screen.get_size()).convert()
     background.fill((255, 255, 255))
 
-    # Draw black border around game board
-    border_color = (0, 0, 0)
-    border_location = (0, 0, _WIDTH, _HEIGHT)
-    border = pygame.draw.rect(background, border_color, border_location, 5)
+    # Draw game board border
+    pygame.draw.rect(background, (0, 0, 0), (0, 0, WIDTH, HEIGHT), 5)
 
-    # Draw crossing game board
-    line_width = int((1/3) * _WIDTH)
-    line_height = int((1/3) * _HEIGHT)
-    pygame.draw.line(background, (0, 0, 0), (line_width, 25), (line_width, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), (line_width * 2, 25), (line_width * 2, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, line_height), (_WIDTH - 25, line_height), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, line_height * 2), (_WIDTH - 25, line_height * 2), 2)
-
-    # Update screen with background
+    # Draw cross hatches
+    line_width = int((1/3) * WIDTH)
+    line_height = int((1/3) * HEIGHT)
+    pygame.draw.line(background, (0, 0, 0), (line_width, 25), (line_width, HEIGHT - 25), 2)
+    pygame.draw.line(background, (0, 0, 0), (line_width * 2, 25), (line_width * 2, HEIGHT - 25), 2)
+    pygame.draw.line(background, (0, 0, 0), (25, line_height), (WIDTH - 25, line_height), 2)
+    pygame.draw.line(background, (0, 0, 0), (25, line_height * 2), (WIDTH - 25, line_height * 2), 2)
+    
+    # Push background to screen
     screen.blit(background, (0, 0))
-init_board()
 
-# Draws strikes on board and declares winner
-def declare_winner(winner):
-    global can_move
-    can_move = False
+# Returns all possible moves of the current board as a list
+def get_all_possible_moves(board):
+    moves = []
 
-    if winner == (5, 5, 5, 5, 5):
+    for x in range(0, 3):
+        for y in range(0, 3):
+            if board[x][y] is None:
+                moves.append((x, y))
+    return moves
+
+# Draws the crosses through winning moves
+def end_game(status):
+    if status == (None, None, None, None, None):
+        return
+    if status == (5, 5, 5, 5, 5):
         print("Draw")
         return
-
-    grid_width = (1/6) * _WIDTH
-    grid_height = (1/6) * _HEIGHT
-
-    p_begin = (int(grid_width + winner[1] * grid_width * 2), int(grid_height + winner[2] * grid_height * 2))
-    p_end = (int(grid_width + winner[3] * grid_width * 2), int(grid_height + winner[4] * grid_height * 2))
-
+    grid_width = (1/6) * WIDTH
+    grid_height = (1/6) * HEIGHT
+    p_begin = (int(grid_width + status[1] * grid_width * 2), int(grid_height + status[2] * grid_height * 2))
+    p_end = (int(grid_width + status[3] * grid_width * 2), int(grid_height + status[4] * grid_height * 2))
     pygame.draw.line(screen, (255, 0, 0), p_begin, p_end, 15)
 
-# Check board for winner
-def check_board():
-    global board
-
+# Returns the status of the current board i.e who won or draw
+def check_status(board):
     for x in range(0, 3):
         if board[x][0] == board[x][1] == board[x][2] and board[x][0] is not None:
             return (board[x][0], x, 0, x, 2)
@@ -93,180 +93,107 @@ def check_board():
         return (5, 5, 5, 5, 5)
     return (None, None, None, None, None)
 
-########################
-# Minimax Implementation
-def minimax(depth, isMax):
-    global board
-    global player_turn
-
-    status = check_board()[0]
-    
-    if status == True:
-        score = -10
-        return score
-    elif status == False:
-        score = 10
-        return score
-    elif status == 5:
-        score = 0
-        return score
+# Minimax implementation: Shuffles through all possible moves and chooses best move
+def minimax(board, isMax):
+    status = check_status(board)
+    if status[0] == 5:
+        return 0
+    elif status[0] == True:
+        return -1
+    elif status[0] == False:
+        return 1
     else:
-        if isMax:
-            maxScore = -math.inf
-            for x_max in range(0, 3):
-                for y_max in range(0, 3):
-                    if board[x_max][y_max] is None:
-                        board[x_max][y_max] = player_turn
-                        player_turn = not player_turn
+        scores = []
+        for move in get_all_possible_moves(board):
+            board[move[0]][move[1]] = not isMax
+            scores.append(minimax(board, not isMax))
+            board[move[0]][move[1]] = None
+        return max(scores) if isMax else min(scores)
 
-                        draw_board()
-                        pygame.display.update()
-                        time.sleep(1)
-
-                        score = minimax(depth + 1, False)
-                        board[x_max][y_max] = None
-                        if score > maxScore:
-                            maxScore = score
-            return maxScore
-        else:
-            minScore = math.inf
-            for x_min in range(0, 3):
-                for y_min in range(0, 3):
-                    if board[x_min][y_min] is None:
-                        board[x_min][y_min] = player_turn
-                        player_turn = not player_turn
-
-                        draw_board()
-                        pygame.display.update()
-                        time.sleep(1)
-
-                        score = minimax(depth + 1, True)
-                        board[x_min][y_min] = None
-                        if score < minScore:
-                            minScore = score
-            return minScore
-
-
-def firstMove():
-    global board
-    global player_turn
-
+# Setup to start recursive minimax function
+def compute_next_move(board):
     ideal_score = -math.inf
     ideal_move = None
-    backup_player_turn = player_turn
+    for move in get_all_possible_moves(board):
+        board[move[0]][move[1]] = False
+        score = minimax(board, False)
+        board[move[0]][move[1]] = None
+        if score > ideal_score:
+            ideal_score = score
+            ideal_move = move
+    board[ideal_move[0]][ideal_move[1]] = False
+
+# Change board state based on player move
+def player_move(board, mouse_pos, player_turn):
+    if not mouse_pos == round_mouse_loc():
+        return False
     
-    for x_range in range(0, 3):
-        for y_range in range(0, 3):
-            if board[x_range][y_range] is None:
-                board[x_range][y_range] = player_turn
-                player_turn = not player_turn
-                score = minimax(0, True)
-                board[x_range][y_range] = None
-                if score > ideal_score:
-                    ideal_score = score
-                    ideal_move = (x_range, y_range)
-    player_turn = backup_player_turn
-    board[ideal_move[0]][ideal_move[1]] = player_turn
-    
-########################
+    if player_turn and (mouse_pos[0], mouse_pos[1]) in get_all_possible_moves(board):
+            board[mouse_pos[0]][mouse_pos[1]] = True
+            return True
+    else:
+        return False
 
-# Change board state
-def click_event():
-    global board
-    global mouse_loc
-    global player_turn
-    global can_move
-
-    if player_turn and mouse_loc == round_mouse_loc() and can_move:
-        if board[mouse_loc[0]][mouse_loc[1]] is None:
-            board[mouse_loc[0]][mouse_loc[1]] = player_turn
-            player_turn = not player_turn
-
-    if not player_turn and check_board()[0] is None:
-        firstMove()
-        player_turn = not player_turn
-
-# Returns mouse position as a tuple of grid
+# Returns mouse position as grid value
 def round_mouse_loc():
     x_pos, y_pos = pygame.mouse.get_pos()
-
-    if x_pos < _WIDTH / 3:
+    if x_pos < WIDTH / 3:
         x = 0
-    elif _WIDTH / 3 <= x_pos < (2/3) * _WIDTH:
+    elif WIDTH / 3 <= x_pos < (2/3) * WIDTH:
         x = 1
     else:
         x = 2
-
-    if y_pos < _HEIGHT / 3:
+    if y_pos < HEIGHT / 3:
         y = 0
-    elif _HEIGHT / 3 <= y_pos < (2/3) * _HEIGHT:
+    elif HEIGHT / 3 <= y_pos < (2/3) * HEIGHT:
         y = 1
     else:
         y = 2
-
     return (x, y)
 
-# Draw current state of the board
-def draw_board():
-    global board
-    
-    ##
-    # Set background color to white
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((255, 255, 255))
+# Draws the current state of the given board object
+def draw_game(board):
+    init_board()
+    for x in range(0, 3):
+        for y in range(0, 3):
+            if not board[x][y] is None:
+                x_pos_for_move = ((1/6) + (2/6) * x) * WIDTH
+                y_pos_for_move = ((1/6) + (2/6) * y) * HEIGHT
+                if board[x][y]:
+                    screen.blit(x_img, (int(x_pos_for_move - scale_img_x / 2), int(y_pos_for_move - scale_img_y / 2)))
+                else:
+                    screen.blit(o_img, (int(x_pos_for_move - scale_img_x / 2), int(y_pos_for_move - scale_img_y / 2)))
 
-    # Draw black border around game board
-    border_color = (0, 0, 0)
-    border_location = (0, 0, _WIDTH, _HEIGHT)
-    border = pygame.draw.rect(background, border_color, border_location, 5)
+reset_variables()
+init_board()
 
-    # Draw crossing game board
-    line_width = int((1/3) * _WIDTH)
-    line_height = int((1/3) * _HEIGHT)
-    pygame.draw.line(background, (0, 0, 0), (line_width, 25), (line_width, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), (line_width * 2, 25), (line_width * 2, _HEIGHT - 25), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, line_height), (_WIDTH - 25, line_height), 2)
-    pygame.draw.line(background, (0, 0, 0), (25, line_height * 2), (_WIDTH - 25, line_height * 2), 2)
-
-    # Update screen with background
-    screen.blit(background, (0, 0))
-    ##
-
-    for x_index in range(0, 3):
-            for y_index in range(0, 3):
-                if board[x_index][y_index] is not None:
-                    x = ((1/6) + (2/6) * x_index) * _WIDTH
-                    y = ((1/6) + (2/6) * y_index) * _HEIGHT
-                    if board[x_index][y_index]:
-                        screen.blit(x_move, (int(x - scale_img_x / 2), int(y - scale_img_y / 2)))
-                    else:
-                        screen.blit(o_move, (int(x - scale_img_x / 2), int(y - scale_img_y / 2)))
-
-game_end = False
-while not game_end:
-
+game_over = False
+while not game_over:
     for event in pygame.event.get():
-
         if event.type == pygame.QUIT:
             sys.exit(0)
-
-        # If event is mouseclickdown
+    
         elif event.type == 5:
-            # Later used to check if mouse moved and to do no move if mouse moved
             mouse_loc = round_mouse_loc()
 
-        # If event is mouseclickup
         elif event.type == 6:
-            click_event()
-            draw_board()
-
-            winner = check_board()
-            if winner[0] is not None:
-                declare_winner(winner)
+            if player_move(board, mouse_loc, player_turn):
+                player_turn = not player_turn
+            draw_game(board)
+            end_game(check_status(board))
+            
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                reset_variables()
                 init_board()
-    
+
+    if not player_turn:
+        compute_next_move(board)
+        player_turn = not player_turn
+        draw_game(board)
+        end_game(check_status(board))
+
     pygame.display.update()
+
+
