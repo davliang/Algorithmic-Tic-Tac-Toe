@@ -1,6 +1,5 @@
 import pygame
 import sys
-from itertools import chain
 
 pygame.init()
 
@@ -48,25 +47,24 @@ def init_board():
     screen.blit(background, (0, 0))
 init_board()
 
+# Draws strikes on board and declares winner
 def declare_winner(winner):
-    if winner is None:
-        return
-    print(winner)
+    
 
 # Check board for winner
 def check_board():
     global board
 
     for x in range(0, 3):
-        if board[x][0] == board[x][1] == board[x][2]:
-            return board[x][0]
+        if board[x][0] == board[x][1] == board[x][2] and board[x][0] is not None:
+            return (board[x][0], x, 0, x, 2)
     for y in range(0, 3):
-        if board[0][y] == board[1][y] == board[2][y]:
-            return board[0][y]
-    if board[0][0] == board[1][1] == board[2][2]:
-        return board[0][0]
-    if board[0][2] == board[1][1] == board[2][0]:
-        return board[0][2]
+        if board[0][y] == board[1][y] == board[2][y] and board[0][y] is not None:
+            return (board[0][y], 0, y, 2, y)
+    if board[0][0] == board[1][1] == board[2][2] and board[0][0] is not None:
+        return (board[0][0], 0, 0, 2, 2)
+    if board[0][2] == board[1][1] == board[2][0] and board[0][2] is not None:
+        return (board[0][2], 0, 2, 2, 0)
     return None
 
 # Change board state
@@ -74,6 +72,7 @@ def click_event():
     global board
     global mouse_loc
     global player_turn
+    global can_move
 
     if mouse_loc == round_mouse_loc():
         if board[mouse_loc[0]][mouse_loc[1]] is None:
@@ -129,8 +128,9 @@ while not game_end:
 
         # If event is mouseclickup
         elif event.type == 6:
-            #draw_board()
+
             click_event()
+
             draw_board()
 
             winner = check_board()
