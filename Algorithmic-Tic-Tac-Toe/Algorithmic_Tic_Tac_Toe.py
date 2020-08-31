@@ -56,25 +56,31 @@ def click_event():
     global mouse_loc
     global player_turn
 
-    if mouse_loc == pygame.mouse.get_pos():
-        if mouse_loc[0] < _WIDTH / 3:
-            x = 0
-        elif _WIDTH / 3 <= mouse_loc[0] < (2/3) * _WIDTH:
-            x = 1
-        else:
-            x = 2
-
-        if mouse_loc[1] < _HEIGHT / 3:
-            y = 0
-        elif _HEIGHT / 3 <= mouse_loc[1] < (2/3) * _HEIGHT:
-            y = 1
-        else:
-            y = 2
-
-        if board[x][y] is None:
-            board[x][y] = player_turn
+    if mouse_loc == round_mouse_loc():
+        if board[mouse_loc[0]][mouse_loc[1]] is None:
+            board[mouse_loc[0]][mouse_loc[1]] = player_turn
             player_turn = not player_turn
             draw_board()
+
+def round_mouse_loc():
+    x_pos, y_pos = pygame.mouse.get_pos()
+    if x_pos < _WIDTH / 3:
+        x = 0
+    elif _WIDTH / 3 <= x_pos < (2/3) * _WIDTH:
+        x = 1
+    else:
+        x = 2
+
+    if y_pos < _HEIGHT / 3:
+        y = 0
+    elif _HEIGHT / 3 <= y_pos < (2/3) * _HEIGHT:
+        y = 1
+    else:
+        y = 2
+
+    print(x, y)
+
+    return (x, y)
 
 # Draw current state of the board
 def draw_board():
@@ -110,7 +116,7 @@ while not game_end:
         # If event is mouseclickdown
         elif event.type == 5:
             # Later used to check if mouse moved and to do no move if mouse moved
-            mouse_loc = pygame.mouse.get_pos()
+            mouse_loc = round_mouse_loc()
 
         # If event is mouseclickup
         elif event.type == 6:
